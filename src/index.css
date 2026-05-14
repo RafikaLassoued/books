@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background-color: #FDF8EE;
+    color: #1C1917;
+    direction: rtl;
+    overflow-x: hidden;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #F5EDD8; }
+  ::-webkit-scrollbar-thumb { background: #C9A84C; border-radius: 3px; }
+}
+
+@layer components {
+  .btn-gold {
+    @apply bg-gold text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-gold-dark hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2;
+  }
+  .btn-ink {
+    @apply bg-ink text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-ink-light hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2;
+  }
+  .btn-outline {
+    @apply border-2 border-ink text-ink px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:bg-ink hover:text-white flex items-center gap-2;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-cream-dark overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  .input {
+    @apply w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all bg-white;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Opacity 0 initial for animated elements */
+.animate-fade-up, .animate-fade-in { opacity: 0; }
