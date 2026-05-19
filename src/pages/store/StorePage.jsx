@@ -505,6 +505,7 @@ export default function StorePage() {
         setFiltered(booksData || [])
         setCategories(categoriesData || [])
       } catch (error) {
+        console.error('Failed to load books/categories:', error)
         toast.error('تعذر تحميل الكتب. حاول مرة أخرى لاحقاً.')
       }
       setLoadingBooks(false)

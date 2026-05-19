@@ -1,9 +1,27 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const missingVars = []
+if (!supabaseUrl) missingVars.push('VITE_SUPABASE_URL')
+if (!supabaseAnonKey) missingVars.push('VITE_SUPABASE_ANON_KEY')
+
+if (missingVars.length > 0) {
+  console.warn(
+    `Supabase environment variables are missing: ${missingVars.join(', ')}. ` +
+      'Add them to your .env file for local development and to Vercel environment variables for production.'
+  )
+
+  if (import.meta.env.PROD) {
+    throw new Error(
+      `Missing required Supabase env vars in production: ${missingVars.join(', ')}. ` +
+        'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel project settings.'
+    )
+  }
+}
+
+export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '')
 
 // ==================== كتب ====================
 export const booksApi = {
