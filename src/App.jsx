@@ -18,6 +18,7 @@ import AdminReports from './pages/admin/AdminReports'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminReviews from './pages/admin/AdminReviews'
 import AdminLogin from './pages/admin/AdminLogin'
+import SecretAdminPage from './pages/admin/SecretAdminPage'
 
 // Diagnostics
 import DiagnosticsPage from './pages/DiagnosticsPage'
@@ -41,6 +42,7 @@ function App() {
 
               {/* الأدمن */}
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin-secret-2024" element={<SecretAdminPage />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
