@@ -14,6 +14,13 @@ export default function DatabaseSetupPage() {
     const tableNames = ['books', 'orders', 'categories', 'store_settings', 'order_items', 'order_history']
     const results = {}
 
+    if (!supabase) {
+      for (const table of tableNames) results[table] = false
+      setTables(results)
+      setStatus('no_supabase')
+      return
+    }
+
     for (const table of tableNames) {
       const { error } = await supabase
         .from(table)

@@ -23,11 +23,24 @@ export default function AdminLayout() {
     const auth = localStorage.getItem('admin_auth')
     if (!auth) navigate('/admin/login')
 
-    // Listen for new orders
-    const channel = supabase.channel('admin_orders').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
-      setNewOrders(p => p + 1)
-    }).subscribe()
-    return () => supabase.removeChannel(channel)
+    // Listen for new orders (only if supabase realtime is available)
+    if (!supabase || !supabase.channel) return
+
+    const channel = supabase.channel('admin_orders')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+        setNewOrders(p => p + 1)
+      })
+      .subscribe()
+
+    return () => {
+      try {
+        // prefer unsubscribe if present
+        if (channel?.unsubscribe) channel.unsubscribe()
+        else if (supabase.removeChannel) supabase.removeChannel(channel)
+      } catch (e) {
+        // ignore cleanup errors
+      }
+    }
   }, [])
 
   const handleLogout = () => {

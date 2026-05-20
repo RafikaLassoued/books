@@ -22,6 +22,15 @@ export default function DiagnosticsPage() {
       const key = import.meta.env.VITE_SUPABASE_ANON_KEY
       newStatus.supabaseKey = key ? `✅ ${key.slice(0, 20)}...` : '❌ غير موجودة'
 
+      // If supabase client isn't configured, skip live checks
+      if (!supabase) {
+        newStatus.booksTable = '❌ Supabase not configured'
+        newStatus.ordersTable = '❌ Supabase not configured'
+        newStatus.categoriesTable = '❌ Supabase not configured'
+        setStatus(newStatus)
+        return
+      }
+
       // 3. Check books table
       const { error: booksError } = await supabase
         .from('books')

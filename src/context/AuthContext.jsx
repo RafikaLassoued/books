@@ -11,28 +11,49 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true
 
-    const initializeAuth = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!mounted) return
-      setSession(data?.session ?? null)
-      setUser(data?.session?.user ?? null)
+    if (!supabase || !supabase.auth) {
+      // Supabase not configured — don't attempt auth calls
       setLoading(false)
+      return () => { mounted = false }
+    }
+
+    const initializeAuth = async () => {
+      try {
+        const res = await supabase.auth.getSession()
+        if (!mounted) return
+        const data = res?.data ?? res
+        setSession(data?.session ?? null)
+        setUser(data?.session?.user ?? null)
+      } catch (err) {
+        console.warn('Auth initialization failed:', err?.message ?? err)
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
 
     initializeAuth()
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const onChangeRes = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
       setSession(session ?? null)
       setUser(session?.user ?? null)
     })
 
+    const subscription = onChangeRes?.data?.subscription ?? onChangeRes?.subscription ?? onChangeRes
+
     return () => {
       mounted = false
-      subscription.subscription.unsubscribe()
+      try {
+        if (subscription?.unsubscribe) subscription.unsubscribe()
+        else if (subscription?.subscription?.unsubscribe) subscription.subscription.unsubscribe()
+      } catch (e) {
+        // ignore
+      }
     }
   }, [])
 
   const signIn = async ({ email, password }) => {
+    if (!supabase || !supabase.auth) throw new Error('Supabase not configured')
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     setSession(data.session ?? null)
@@ -41,6 +62,7 @@ export function AuthProvider({ children }) {
   }
 
   const signUp = async ({ email, password }) => {
+    if (!supabase || !supabase.auth) throw new Error('Supabase not configured')
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
     setSession(data.session ?? null)
@@ -49,7 +71,16 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    if (!supabase || !supabase.auth) {
+      setSession(null)
+      setUser(null)
+      return
+    }
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.warn('signOut failed:', e?.message ?? e)
+    }
     setSession(null)
     setUser(null)
   }

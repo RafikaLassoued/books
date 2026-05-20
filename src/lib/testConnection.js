@@ -6,7 +6,11 @@ import { supabase } from './supabase.js'
 export async function testSupabaseConnection() {
   try {
     console.log('🔍 جاري اختبار الاتصال بـ Supabase...')
-    
+    if (!supabase) {
+      console.error('❌ Supabase client not configured')
+      return { success: false, error: 'Supabase client not configured' }
+    }
+
     // 1. اختبر الاتصال الأساسي
     const { data: testData, error: testError } = await supabase
       .from('books')

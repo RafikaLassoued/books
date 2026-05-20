@@ -41,6 +41,7 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     try {
+      if (!supabase || !supabase.auth) throw new Error('Supabase not configured')
       const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password
@@ -49,7 +50,7 @@ export default function AdminLogin() {
       localStorage.setItem('admin_auth', 'true')
       navigate('/admin/dashboard')
     } catch (error) {
-      toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+      toast.error('تعذر تسجيل الدخول — تحقق من إعدادات الخادم أو المتغيرات البيئية')
     } finally {
       setLoading(false)
     }
