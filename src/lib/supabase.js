@@ -14,18 +14,22 @@ if (missingVars.length > 0) {
   )
 
   if (import.meta.env.PROD) {
-    throw new Error(
+    console.error(
       `Missing required Supabase env vars in production: ${missingVars.join(', ')}. ` +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel project settings.'
     )
   }
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '')
+export const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null
 
 // ==================== كتب ====================
 export const booksApi = {
   getAll: async (filters = {}) => {
+    if (!supabase) {
+      console.warn('booksApi.getAll: supabase not configured — returning empty list')
+      return []
+    }
     let query = supabase.from('books').select('*').eq('is_active', true)
     if (filters.category) query = query.eq('category', filters.category)
     if (filters.featured) query = query.eq('is_featured', true)
@@ -38,21 +42,28 @@ export const booksApi = {
     return data
   },
   getById: async (id) => {
+    if (!supabase) {
+      console.warn('booksApi.getById: supabase not configured — returning null')
+      return null
+    }
     const { data, error } = await supabase.from('books').select('*').eq('id', id).single()
     if (error) throw error
     return data
   },
   create: async (data) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: book, error } = await supabase.from('books').insert(data).select().single()
     if (error) throw error
     return book
   },
   update: async (id, data) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: book, error } = await supabase.from('books').update(data).eq('id', id).select().single()
     if (error) throw error
     return book
   },
   delete: async (id) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data, error } = await supabase.from('books').update({ is_active: false }).eq('id', id)
     if (error) throw error
     return data
@@ -67,6 +78,7 @@ export const booksApi = {
 // ==================== طلبات ====================
 export const ordersApi = {
   create: async (orderData, items) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: order, error } = await supabase.from('orders').insert(orderData).select().single()
     if (error) throw error
     const orderItems = items.map(item => ({
@@ -83,6 +95,10 @@ export const ordersApi = {
     return order
   },
   getAll: async (filters = {}) => {
+    if (!supabase) {
+      console.warn('ordersApi.getAll: supabase not configured — returning empty list')
+      return []
+    }
     let query = supabase.from('orders').select(`*, order_items(*)`).order('created_at', { ascending: false })
     if (filters.status) query = query.eq('status', filters.status)
     if (filters.search) query = query.or(`customer_name.ilike.%${filters.search}%,customer_phone.ilike.%${filters.search}%`)
@@ -91,14 +107,34 @@ export const ordersApi = {
     if (error) throw error
     return data
   },
-  getByUser: (userId) => supabase.from('orders').select(`*, order_items(*)`).eq('user_id', userId).order('created_at', { ascending: false }),
-  getById: (id) => supabase.from('orders').select(`*, order_items(*), order_history(*)`).eq('id', id).single(),
+  getByUser: (userId) => {
+    if (!supabase) {
+      console.warn('ordersApi.getByUser: supabase not configured — returning empty list')
+      return { then: (cb) => cb([]) }
+    }
+    return supabase.from('orders').select(`*, order_items(*)`).eq('user_id', userId).order('created_at', { ascending: false })
+  },
+  getById: (id) => {
+    if (!supabase) {
+      console.warn('ordersApi.getById: supabase not configured — returning null')
+      return { then: (cb) => cb(null) }
+    }
+    return supabase.from('orders').select(`*, order_items(*), order_history(*)`).eq('id', id).single()
+  },
   updateStatus: async (id, status, note = '') => {
+    if (!supabase) throw new Error('Supabase not configured')
     await supabase.from('orders').update({ status }).eq('id', id)
     await supabase.from('order_history').insert({ order_id: id, status, note })
   },
-  update: (id, data) => supabase.from('orders').update(data).eq('id', id).select().single(),
+  update: (id, data) => {
+    if (!supabase) throw new Error('Supabase not configured')
+    return supabase.from('orders').update(data).eq('id', id).select().single()
+  },
   getStats: async () => {
+    if (!supabase) {
+      console.warn('ordersApi.getStats: supabase not configured — returning empty list')
+      return []
+    }
     const { data } = await supabase.from('orders').select('status, total, created_at')
     return data
   },
@@ -107,6 +143,10 @@ export const ordersApi = {
 // ==================== التقييمات ====================
 export const reviewsApi = {
   getPublished: async () => {
+    if (!supabase) {
+      console.warn('reviewsApi.getPublished: supabase not configured — returning empty list')
+      return []
+    }
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -116,6 +156,10 @@ export const reviewsApi = {
     return data || []
   },
   getAll: async () => {
+    if (!supabase) {
+      console.warn('reviewsApi.getAll: supabase not configured — returning empty list')
+      return []
+    }
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -124,6 +168,7 @@ export const reviewsApi = {
     return data || []
   },
   create: async (reviewData) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data, error } = await supabase
       .from('reviews')
       .insert(reviewData)
@@ -133,6 +178,7 @@ export const reviewsApi = {
     return data
   },
   update: async (id, reviewData) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data, error } = await supabase
       .from('reviews')
       .update(reviewData)
@@ -143,6 +189,7 @@ export const reviewsApi = {
     return data
   },
   delete: async (id) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data, error } = await supabase
       .from('reviews')
       .delete()
@@ -155,10 +202,15 @@ export const reviewsApi = {
 // ==================== إعدادات ====================
 export const settingsApi = {
   getAll: async () => {
+    if (!supabase) {
+      console.warn('settingsApi.getAll: supabase not configured — returning empty settings')
+      return {}
+    }
     const { data } = await supabase.from('store_settings').select('*')
     return data?.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) || {}
   },
   update: async (updates) => {
+    if (!supabase) throw new Error('Supabase not configured')
     for (const [key, value] of Object.entries(updates)) {
       await supabase.from('store_settings').upsert({ key, value }, { onConflict: 'key' })
     }
@@ -168,26 +220,34 @@ export const settingsApi = {
 // ==================== فئات ====================
 export const categoriesApi = {
   getAll: async () => {
+    if (!supabase) {
+      console.warn('categoriesApi.getAll: supabase not configured — returning empty list')
+      return []
+    }
     const { data, error } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
     if (error) throw error
     return data
   },
   adminGetAll: async () => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data, error } = await supabase.from('categories').select('*').order('sort_order')
     if (error) throw error
     return data
   },
   create: async (data) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: category, error } = await supabase.from('categories').insert(data).select().single()
     if (error) throw error
     return category
   },
   update: async (id, payload) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: category, error } = await supabase.from('categories').update(payload).eq('id', id).select().single()
     if (error) throw error
     return category
   },
   delete: async (id) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { data: category, error } = await supabase.from('categories').update({ is_active: false }).eq('id', id).select().single()
     if (error) throw error
     return category
