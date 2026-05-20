@@ -12,6 +12,7 @@ import { booksApi, categoriesApi, ordersApi } from '../../lib/supabase'
 import { useReviews } from '../../hooks/useReviews'
 import { ReviewsCarousel } from '../../components/ReviewsCarousel'
 import { WILAYAS, PAYMENT_METHODS, DELIVERY_TYPES } from '../../lib/algeria'
+import { supabaseConfigured } from '../../lib/supabase'
 
 // ==================== Book Card ====================
 function BookCard({ book, onAddToCart, onSelect }) {
@@ -495,6 +496,7 @@ export default function StorePage() {
   const [scrolled, setScrolled] = useState(false)
   const [loadingBooks, setLoadingBooks] = useState(true)
   const booksRef = useRef(null)
+  const showSupabaseWarning = !supabaseConfigured
 
   useEffect(() => {
     const loadData = async () => {
@@ -555,6 +557,13 @@ export default function StorePage() {
 
   return (
     <div className="min-h-screen bg-cream font-body">
+      {showSupabaseWarning && (
+        <div className="bg-red-100 border border-red-200 text-red-800 px-6 py-4 mb-4 text-sm rounded-xl mx-auto max-w-6xl mt-20 relative z-40">
+          <strong>تحذير:</strong> التطبيق غير متصل بقاعدة Supabase في الإنتاج.
+          أضف المتغيرات التالية في إعدادات Vercel ثم أعد النشر:
+          <span className="block mt-2 font-mono text-xs">VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_ADMIN_SECRET</span>
+        </div>
+      )}
       {/* Navbar */}
       <nav className={`fixed top-0 inset-x-0 z-30 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">

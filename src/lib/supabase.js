@@ -22,13 +22,123 @@ if (missingVars.length > 0) {
 }
 
 export const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null
+export const supabaseConfigured = Boolean(supabase)
+export const supabaseMissingVars = missingVars
+
+const fallbackBooks = [
+  {
+    id: 1,
+    title: 'موسم القراءة',
+    author: 'صفاء المغربي',
+    category: 'روايات',
+    price: 1250,
+    original_price: 1500,
+    rating: 4.8,
+    is_active: true,
+    is_featured: true,
+    is_new_release: false,
+    image_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800',
+    description: 'رواية عربية تجمع بين الحنين والمغامرة والمشاعر الإنسانية العميقة.',
+    pages: 320,
+    publish_year: 2023,
+    stock: 12,
+  },
+  {
+    id: 2,
+    title: 'رحلة إلى الصحراء',
+    author: 'مصطفى البشير',
+    category: 'سفر',
+    price: 980,
+    original_price: 1200,
+    rating: 4.6,
+    is_active: true,
+    is_featured: true,
+    is_new_release: false,
+    image_url: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800',
+    description: 'سرد شيق لرحلة مترفة عبر قلب الصحراء الجزائرية.',
+    pages: 264,
+    publish_year: 2022,
+    stock: 18,
+  },
+  {
+    id: 3,
+    title: 'إدارة الوقت الذكي',
+    author: 'ليلى حمدي',
+    category: 'تنمية بشرية',
+    price: 760,
+    original_price: 0,
+    rating: 4.4,
+    is_active: true,
+    is_featured: false,
+    is_new_release: true,
+    image_url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
+    description: 'دليل عملي لتحسين الإنتاجية وتنظيم الوقت في الحياة اليومية.',
+    pages: 210,
+    publish_year: 2024,
+    stock: 25,
+  },
+  {
+    id: 4,
+    title: 'الذكاء الاصطناعي ببساطة',
+    author: 'ياسين المرزوق',
+    category: 'تكنولوجيا',
+    price: 1420,
+    original_price: 1700,
+    rating: 4.9,
+    is_active: true,
+    is_featured: true,
+    is_new_release: false,
+    image_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800',
+    description: 'مقدمة عملية لأساسيات الذكاء الاصطناعي وتطبيقاته الحديثة.',
+    pages: 376,
+    publish_year: 2023,
+    stock: 20,
+  },
+]
+
+const fallbackCategories = [
+  { id: 1, name: 'الكل', slug: 'all', icon: '📚' },
+  { id: 2, name: 'روايات', slug: 'روايات', icon: '📖' },
+  { id: 3, name: 'سفر', slug: 'سفر', icon: '✈️' },
+  { id: 4, name: 'تنمية بشرية', slug: 'تنمية بشرية', icon: '🌱' },
+  { id: 5, name: 'تكنولوجيا', slug: 'تكنولوجيا', icon: '💻' },
+]
+
+const fallbackReviews = [
+  { id: 1, name: 'أحمد', rating: 5, comment: 'توصيل ياليدين سريع جداً، استلمت كتبي في 24 ساعة فقط. خدمة ممتازة!', source: 'الجزائر العاصمة', avatar: '' },
+  { id: 2, name: 'سارة', rating: 5, comment: 'دفعت ببريدي موب وكان سهلاً جداً. الكتب وصلت بحالة مثالية. أنصح بهذا المتجر.', source: 'وهران', avatar: '' },
+  { id: 3, name: 'كريم', rating: 5, comment: 'اخترت الاستلام من مكتب ياليدين وكان الأسرع. سعر التوصيل مناسب جداً.', source: 'قسنطينة', avatar: '' },
+]
+
+const fallbackSettings = {
+  store_name: 'مكتبة الكتب',
+  whatsapp_number: '213000000000',
+  hero_title: 'اكتشف أفضل الكتب التي تستحق القراءة',
+  hero_subtitle: 'توصيل ياليدين لجميع ولايات الجزائر الـ 58 | دفع عند الاستلام أو بريدي موب',
+}
 
 // ==================== كتب ====================
+
+// Debug: show whether env vars were read and whether client was created
+try {
+  const urlHost = supabaseUrl ? (() => { try { return new URL(supabaseUrl).host } catch (e) { return supabaseUrl } })() : null
+  // Do not print full anon key in logs; only indicate presence
+  console.debug('Supabase:', { urlHost, hasAnonKey: !!supabaseAnonKey, clientCreated: !!supabase })
+} catch (e) {
+  // swallow
+}
+
 export const booksApi = {
   getAll: async (filters = {}) => {
     if (!supabase) {
-      console.warn('booksApi.getAll: supabase not configured — returning empty list')
-      return []
+      console.warn('booksApi.getAll: supabase not configured — returning fallback sample books')
+      let data = fallbackBooks.filter(book => book.is_active)
+      if (filters.category) data = data.filter(book => book.category === filters.category)
+      if (filters.featured) data = data.filter(book => book.is_featured)
+      if (filters.newRelease) data = data.filter(book => book.is_new_release)
+      if (filters.sort === 'price_asc') data = data.sort((a, b) => a.price - b.price)
+      else if (filters.sort === 'price_desc') data = data.sort((a, b) => b.price - a.price)
+      return data
     }
     let query = supabase.from('books').select('*').eq('is_active', true)
     if (filters.category) query = query.eq('category', filters.category)
@@ -43,8 +153,8 @@ export const booksApi = {
   },
   getById: async (id) => {
     if (!supabase) {
-      console.warn('booksApi.getById: supabase not configured — returning null')
-      return null
+      console.warn('booksApi.getById: supabase not configured — returning fallback sample book')
+      return fallbackBooks.find(book => book.id === id) || null
     }
     const { data, error } = await supabase.from('books').select('*').eq('id', id).single()
     if (error) throw error
@@ -144,8 +254,8 @@ export const ordersApi = {
 export const reviewsApi = {
   getPublished: async () => {
     if (!supabase) {
-      console.warn('reviewsApi.getPublished: supabase not configured — returning empty list')
-      return []
+      console.warn('reviewsApi.getPublished: supabase not configured — returning fallback sample reviews')
+      return fallbackReviews
     }
     const { data, error } = await supabase
       .from('reviews')
@@ -157,8 +267,8 @@ export const reviewsApi = {
   },
   getAll: async () => {
     if (!supabase) {
-      console.warn('reviewsApi.getAll: supabase not configured — returning empty list')
-      return []
+      console.warn('reviewsApi.getAll: supabase not configured — returning fallback sample reviews')
+      return fallbackReviews
     }
     const { data, error } = await supabase
       .from('reviews')
@@ -203,8 +313,8 @@ export const reviewsApi = {
 export const settingsApi = {
   getAll: async () => {
     if (!supabase) {
-      console.warn('settingsApi.getAll: supabase not configured — returning empty settings')
-      return {}
+      console.warn('settingsApi.getAll: supabase not configured — returning fallback settings')
+      return fallbackSettings
     }
     const { data } = await supabase.from('store_settings').select('*')
     return data?.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) || {}
@@ -221,8 +331,8 @@ export const settingsApi = {
 export const categoriesApi = {
   getAll: async () => {
     if (!supabase) {
-      console.warn('categoriesApi.getAll: supabase not configured — returning empty list')
-      return []
+      console.warn('categoriesApi.getAll: supabase not configured — returning fallback categories')
+      return fallbackCategories
     }
     const { data, error } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
     if (error) throw error

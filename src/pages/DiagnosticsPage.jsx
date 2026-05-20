@@ -5,6 +5,7 @@ export default function DiagnosticsPage() {
   const [status, setStatus] = useState({
     supabaseUrl: '🔄 جاري التحقق...',
     supabaseKey: '🔄 جاري التحقق...',
+    adminSecret: '🔄 جاري التحقق...',
     booksTable: '🔄 جاري التحقق...',
     ordersTable: '🔄 جاري التحقق...',
     categoriesTable: '🔄 جاري التحقق...',
@@ -21,6 +22,10 @@ export default function DiagnosticsPage() {
       // 2. Check Key
       const key = import.meta.env.VITE_SUPABASE_ANON_KEY
       newStatus.supabaseKey = key ? `✅ ${key.slice(0, 20)}...` : '❌ غير موجودة'
+
+      // 3. Check admin secret
+      const adminSecret = import.meta.env.VITE_ADMIN_SECRET
+      newStatus.adminSecret = adminSecret ? '✅ موجود' : '❌ غير موجود'
 
       // If supabase client isn't configured, skip live checks
       if (!supabase) {

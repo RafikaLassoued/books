@@ -11,7 +11,10 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const secretParam = new URLSearchParams(location.search).get('secret')
   const requiredSecret = import.meta.env.VITE_ADMIN_SECRET
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
   const isAuthorized = Boolean(requiredSecret && secretParam === requiredSecret)
+  const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
   if (!requiredSecret) {
     return (
@@ -34,6 +37,24 @@ export default function AdminLogin() {
         <div className="w-full max-w-md text-center text-white">
           <h1 className="text-3xl font-display font-bold mb-4">404</h1>
           <p className="text-white/70 mb-6">الصفحة غير موجودة أو الرابط السري غير صالح.</p>
+          <a href="/" className="text-gold underline">العودة للمتجر</a>
+        </div>
+      </div>
+    )
+  }
+
+  if (!supabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-ink flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center text-white">
+          <h1 className="text-3xl font-display font-bold mb-4">Supabase غير مكوّن</h1>
+          <p className="text-white/70 mb-6">
+            يرجى إضافة المتغيرات التالية في إعدادات Vercel لبيئة الإنتاج ثم إعادة النشر:
+          </p>
+          <ul className="text-white/70 space-y-2 list-disc list-inside">
+            <li><code className="text-gold">VITE_SUPABASE_URL</code></li>
+            <li><code className="text-gold">VITE_SUPABASE_ANON_KEY</code></li>
+          </ul>
           <a href="/" className="text-gold underline">العودة للمتجر</a>
         </div>
       </div>
