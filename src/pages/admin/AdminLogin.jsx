@@ -18,7 +18,10 @@ export default function AdminLogin() {
       <div className="min-h-screen bg-ink flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center text-white">
           <h1 className="text-3xl font-display font-bold mb-4">رابط الدخول السري غير مفعّل</h1>
-          <p className="text-white/70 mb-6">أضف متغير البيئة <code className="text-gold">VITE_ADMIN_SECRET</code> في ملف <code className="text-gold">.env</code>.</p>
+          <p className="text-white/70 mb-6">
+            أضف متغير البيئة <code className="text-gold">VITE_ADMIN_SECRET</code> في ملف <code className="text-gold">.env</code> محليًا
+            أو في إعدادات Vercel لبيئة الإنتاج.
+          </p>
           <a href="/" className="text-gold underline">العودة للمتجر</a>
         </div>
       </div>
