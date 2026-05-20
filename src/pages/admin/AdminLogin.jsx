@@ -9,64 +9,53 @@ export default function AdminLogin() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [useDevMode, setUseDevMode] = useState(false)
   
   const secretParam = new URLSearchParams(location.search).get('secret')
   const requiredSecret = import.meta.env.VITE_ADMIN_SECRET || 'admin-dev-key'
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  const isAuthorized = Boolean(secretParam === requiredSecret) || useDevMode
+  const isAuthorized = Boolean(secretParam === requiredSecret)
   const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
-  // سماح بدخول مباشر للتطوير
-  const handleDevLogin = () => {
-    localStorage.setItem('admin_auth', 'true')
-    navigate('/admin/dashboard')
-  }
-
-  if (!isAuthorized && !useDevMode) {
-    return (
-      <div className="min-h-screen bg-ink flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center text-white">
-          <h1 className="text-3xl font-display font-bold mb-4">لوحة التحكم</h1>
-          <p className="text-white/70 mb-8 text-sm">
-            للدخول: استخدم إما البريد والكلمة المرور أعلاه، أو اضغط "دخول مباشر للتطوير"
-          </p>
-          <button 
-            onClick={() => setUseDevMode(true)}
-            className="w-full bg-gold text-white py-3 rounded-xl font-bold hover:bg-gold-dark transition-all mb-4"
-          >
-            دخول مباشر للتطوير
-          </button>
-          <a href="/" className="text-gold underline text-sm block mt-6">العودة للمتجر</a>
-        </div>
-      </div>
-    )
-  }
-
-  if (useDevMode) {
-    // في وضع التطوير، ادخل مباشرة
-    handleDevLogin()
-    return null
-  }
-
+  // في حالة عدم توفر السر، اسمح بالدخول المباشر بـ email/password
   const handleLogin = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    try {
-      if (!supabase || !supabase.auth) throw new Error('Supabase not configured')
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password
-      })
-      if (error) throw error
+    
+    // تحقق بسيط: إذا كان البريد = "admin" والكلمة المرور = "admin"
+    if (form.email === 'admin' && form.password === 'admin') {
       localStorage.setItem('admin_auth', 'true')
       navigate('/admin/dashboard')
-    } catch (error) {
-      toast.error('تعذر تسجيل الدخول — تحقق من إعدادات الخادم أو المتغيرات البيئية')
-    } finally {
-      setLoading(false)
+      return
     }
+
+    // إذا كانت Supabase مكونة، حاول الدخول عبرها
+    if (supabaseConfigured) {
+      setLoading(true)
+      try {
+        const { supabase } = await import('../../lib/supabase')
+        if (!supabase || !supabase.auth) throw new Error('Supabase not configured')
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password
+        })
+        if (error) throw error
+        localStorage.setItem('admin_auth', 'true')
+        navigate('/admin/dashboard')
+      } catch (error) {
+        toast.error('تعذر تسجيل الدخول — البريد أو كلمة المرور خاطئة')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      toast.error('الرجاء استخدام: Email: admin | Password: admin')
+    }
+  }
+
+  // إذا كان السر موجود في الرابط وصحيح، ندخل مباشرة
+  if (isAuthorized) {
+    localStorage.setItem('admin_auth', 'true')
+    navigate('/admin/dashboard', { replace: true })
+    return null
   }
 
   return (
